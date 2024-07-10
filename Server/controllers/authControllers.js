@@ -1,5 +1,6 @@
 const User = require("../Models/user.js");
 const { hashPassword, comparePassword } = require("../helpers/auth.js");
+const jwt = require("jsonwebtoken");  
 
 const test = (req, res) => {
   res.json("Hello World!");
@@ -54,27 +55,44 @@ const loginUser = async (req, res) => {
     const { email, password } = req.body;
 
     // Check if user exists
-    const user = await User.findOne({ email }); 
+    const user = await User.findOne({ email });
     if (!user) {
-      return res.json({
-        error: "user does not exist"
+      return res.status(404).json({
+        error: "User does not exist",
       });
     }
 
-    // Check if password is matched 
-    const match = await comparePassword(password, user.password)
-    if(match){
-      res.json('password matched') 
-    }
-    if(!match){
-      return res.json({
-        error: "password is not matched"
+    // Check if password matches
+    const match = await comparePassword(password, user.password);
+    if (!match) {
+      return res.status(401).json({
+        error: "Password is incorrect",
       });
     }
+
+    // Generate JWT token
+    const token = jwt.sign(
+      { email: user.email, id: user._id, name: user.name },
+      process.env.JWT_SECRET_KEY,
+      { expiresIn: "1h" } // Example expiration time
+    );
+
+    // Set cookie and send response
+    res.cookie("token", token, { httpOnly: true });
+    res.json({
+      token: token,
+      user: {
+        id: user._id,
+        name: user.name,
+        email: user.email,
+      },
+    });
   } catch (error) {
-    console.log(error);
+    console.error(error);
+    res.status(500).json({ error: "Server error" });
   }
 };
+
 
 module.exports = {
   test,
