@@ -2,6 +2,8 @@ const express = require("express");
 const router = express.Router();
 const cors = require("cors");
 const { test, registerUser, loginUser } = require("../controllers/authControllers.js");
+const { addMember, getMembers, updateMember, deleteMember } = require('../controllers/memberController.js');
+const { verifyToken } = require('../util/jwtUtils.js');
 
 // middleware
 router.use(
@@ -14,5 +16,10 @@ router.use(
 router.get("/", test);
 router.post("/register", registerUser);
 router.post("/login", loginUser);
+
+router.post('/members', verifyToken, addMember);
+router.get('/members', verifyToken, getMembers);
+router.put('/members/:memberId', verifyToken, updateMember);
+router.delete('/members/:memberId', verifyToken, deleteMember);
 
 module.exports = router;

@@ -3,36 +3,39 @@ import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-hot-toast';
 import { Container, Row, Col, Form, Button, Card } from 'react-bootstrap';
-import 'bootstrap/dist/css/bootstrap.min.css'; // Import Bootstrap CSS
+import * as Yup from 'yup';
+import { Formik } from 'formik';
 
 const Register = () => {
   const navigate = useNavigate();
 
-  const [data, setData] = useState({
+  const initialValues = {
     name: '',
     email: '',
     password: ''
+  };
+
+  const validationSchema = Yup.object().shape({
+    name: Yup.string().required('Name is required'),
+    email: Yup.string().email('Invalid email').required('Email is required'),
+    password: Yup.string().min(6, 'Password must be at least 6 characters').required('Password is required')
   });
 
-  const registerUser = async (e) => {
-    e.preventDefault();
-    const { name, email, password } = data;
+  const handleSubmit = async (values, { setSubmitting, resetForm }) => {
     try {
-      const response = await axios.post('/register', { name, email, password });
-      if(response.data.error){
+      const response = await axios.post('/register', values);
+      if (response.data.error) {
         toast.error(response.data.error);
       } else {
-        setData({
-          name: '',
-          email: '',
-          password: ''
-        });
+        resetForm();
         toast.success('User registered successfully');
         navigate('/Login');
       }
     } catch (error) {
       console.error('Error registering user:', error);
       toast.error('An error occurred while registering');
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -45,38 +48,54 @@ const Register = () => {
               <Col md={6}>
                 <Card.Body>
                   <Card.Title className="text-center">Register</Card.Title>
-                  <Form onSubmit={registerUser}>
-                    <Form.Group className="mb-3" controlId="formName">
-                      <Form.Label>Name</Form.Label>
-                      <Form.Control 
-                        type="text" 
-                        placeholder="Enter your name" 
-                        value={data.name} 
-                        onChange={(e) => setData({ ...data, name: e.target.value })} 
-                      />
-                    </Form.Group>
-                    <Form.Group className="mb-3" controlId="formEmail">
-                      <Form.Label>Email</Form.Label>
-                      <Form.Control 
-                        type="email" 
-                        placeholder="Enter your email" 
-                        value={data.email} 
-                        onChange={(e) => setData({ ...data, email: e.target.value })} 
-                      />
-                    </Form.Group>
-                    <Form.Group className="mb-3" controlId="formPassword">
-                      <Form.Label>Password</Form.Label>
-                      <Form.Control 
-                        type="password" 
-                        placeholder="Enter your password" 
-                        value={data.password} 
-                        onChange={(e) => setData({ ...data, password: e.target.value })} 
-                      />
-                    </Form.Group>
-                    <Button variant="primary" type="submit" className="w-100">
-                      Register
-                    </Button>
-                  </Form>
+                  <Formik initialValues={initialValues} validationSchema={validationSchema} onSubmit={handleSubmit}>
+                    {({ values, errors, touched, handleChange, handleBlur, handleSubmit, isSubmitting }) => (
+                      <Form onSubmit={handleSubmit}>
+                        <Form.Group className="mb-3" controlId="formName">
+                          <Form.Label>Name</Form.Label>
+                          <Form.Control
+                            type="text"
+                            placeholder="Enter your name"
+                            name="name"
+                            value={values.name}
+                            onChange={handleChange}
+                            onBlur={handleBlur}
+                            isInvalid={touched.name && !!errors.name}
+                          />
+                          <Form.Control.Feedback type="invalid">{errors.name}</Form.Control.Feedback>
+                        </Form.Group>
+                        <Form.Group className="mb-3" controlId="formEmail">
+                          <Form.Label>Email</Form.Label>
+                          <Form.Control
+                            type="email"
+                            placeholder="Enter your email"
+                            name="email"
+                            value={values.email}
+                            onChange={handleChange}
+                            onBlur={handleBlur}
+                            isInvalid={touched.email && !!errors.email}
+                          />
+                          <Form.Control.Feedback type="invalid">{errors.email}</Form.Control.Feedback>
+                        </Form.Group>
+                        <Form.Group className="mb-3" controlId="formPassword">
+                          <Form.Label>Password</Form.Label>
+                          <Form.Control
+                            type="password"
+                            placeholder="Enter your password"
+                            name="password"
+                            value={values.password}
+                            onChange={handleChange}
+                            onBlur={handleBlur}
+                            isInvalid={touched.password && !!errors.password}
+                          />
+                          <Form.Control.Feedback type="invalid">{errors.password}</Form.Control.Feedback>
+                        </Form.Group>
+                        <Button variant="primary" type="submit" className="w-100" disabled={isSubmitting}>
+                          {isSubmitting ? 'Submitting...' : 'Register'}
+                        </Button>
+                      </Form>
+                    )}
+                  </Formik>
                 </Card.Body>
               </Col>
               <Col md={6}>

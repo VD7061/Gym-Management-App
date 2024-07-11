@@ -4,29 +4,36 @@ import { Container, Row, Col, Form, Button, Card } from 'react-bootstrap';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import { toast } from 'react-hot-toast';
 import { useNavigate } from 'react-router-dom';
+import * as Yup from 'yup';
+import { Formik } from 'formik';
 
 const LogIn = () => {
   const navigate = useNavigate();
 
-  const [data, setData] = useState({
+  const initialValues = {
     email: '',
     password: ''
+  };
+
+  const validationSchema = Yup.object().shape({
+    email: Yup.string().email('Invalid email').required('Email is required'),
+    password: Yup.string().required('Password is required')
   });
 
-  const LoginUser = async (e) => {
-    e.preventDefault();
-    const { email, password } = data;
+  const handleSubmit = async (values, { setSubmitting }) => {
     try {
-      const { data: response } = await axios.post('/login', { email, password });
+      const { data: response } = await axios.post('/login', values);
       if (response.error) {
         toast.error(response.error);
       } else {
-        setData({});
+        toast.success('Logged in successfully');
         navigate('/dashboard');
       }
     } catch (error) {
       console.error(error);
       toast.error('An error occurred. Please try again.');
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -42,29 +49,41 @@ const LogIn = () => {
               <Col md={6}>
                 <Card.Body>
                   <Card.Title className="text-center">Log In</Card.Title>
-                  <Form onSubmit={LoginUser}>
-                    <Form.Group className="mb-3" controlId="formEmail">
-                      <Form.Label>Email</Form.Label>
-                      <Form.Control
-                        type="email"
-                        placeholder="Enter your email"
-                        value={data.email}
-                        onChange={(e) => setData({ ...data, email: e.target.value })}
-                      />
-                    </Form.Group>
-                    <Form.Group className="mb-3" controlId="formPassword">
-                      <Form.Label>Password</Form.Label>
-                      <Form.Control
-                        type="password"
-                        placeholder="Enter your password"
-                        value={data.password}
-                        onChange={(e) => setData({ ...data, password: e.target.value })}
-                      />
-                    </Form.Group>
-                    <Button variant="primary" type="submit" className="w-100">
-                      Log In
-                    </Button>
-                  </Form>
+                  <Formik initialValues={initialValues} validationSchema={validationSchema} onSubmit={handleSubmit}>
+                    {({ values, errors, touched, handleChange, handleBlur, handleSubmit, isSubmitting }) => (
+                      <Form onSubmit={handleSubmit}>
+                        <Form.Group className="mb-3" controlId="formEmail">
+                          <Form.Label>Email</Form.Label>
+                          <Form.Control
+                            type="email"
+                            placeholder="Enter your email"
+                            name="email"
+                            value={values.email}
+                            onChange={handleChange}
+                            onBlur={handleBlur}
+                            isInvalid={touched.email && !!errors.email}
+                          />
+                          <Form.Control.Feedback type="invalid">{errors.email}</Form.Control.Feedback>
+                        </Form.Group>
+                        <Form.Group className="mb-3" controlId="formPassword">
+                          <Form.Label>Password</Form.Label>
+                          <Form.Control
+                            type="password"
+                            placeholder="Enter your password"
+                            name="password"
+                            value={values.password}
+                            onChange={handleChange}
+                            onBlur={handleBlur}
+                            isInvalid={touched.password && !!errors.password}
+                          />
+                          <Form.Control.Feedback type="invalid">{errors.password}</Form.Control.Feedback>
+                        </Form.Group>
+                        <Button variant="primary" type="submit" className="w-100" disabled={isSubmitting}>
+                          {isSubmitting ? 'Logging in...' : 'Log In'}
+                        </Button>
+                      </Form>
+                    )}
+                  </Formik>
                 </Card.Body>
               </Col>
             </Row>
