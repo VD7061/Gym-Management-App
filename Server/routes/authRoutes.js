@@ -2,7 +2,7 @@ const express = require("express");
 const router = express.Router();
 const cors = require("cors");
 const { test, registerUser, loginUser } = require("../controllers/authControllers.js");
-const { addMember, getMembers, updateMember, deleteMember } = require('../controllers/memberController.js');
+const { addMember, getMembers, updateMember, deleteMember, getUserDetails } = require('../controllers/memberController.js');
 const { verifyToken } = require('../util/jwtUtils.js');
 
 // middleware
@@ -21,5 +21,6 @@ router.post('/members', verifyToken, addMember);
 router.get('/members', verifyToken, getMembers);
 router.put('/members/:memberId', verifyToken, updateMember);
 router.delete('/members/:memberId', verifyToken, deleteMember);
+router.get('/details', verifyToken, getUserDetails);
 
 module.exports = router;

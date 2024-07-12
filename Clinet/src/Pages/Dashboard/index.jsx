@@ -1,16 +1,37 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { toast } from 'react-hot-toast';
-import 'bootstrap/dist/css/bootstrap.min.css';
+import { useAuth } from '../../Context/AuthContext';
+import {
+  Container,
+  Grid,
+  Paper,
+  Typography,
+  TextField,
+  Button,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  Select,
+  MenuItem,
+  IconButton,
+} from '@mui/material';
+import EditIcon from '@mui/icons-material/Edit';
+import DeleteIcon from '@mui/icons-material/Delete';
+import Layout from '../Layout';
 
 const Dashboard = () => {
+  const { logout } = useAuth();
   const [members, setMembers] = useState([]);
   const [name, setName] = useState('');
   const [age, setAge] = useState('');
   const [phoneNumber, setPhoneNumber] = useState('');
   const [dateOfJoining, setDateOfJoining] = useState('');
   const [shift, setShift] = useState('');
-  const [paymentStatus, setPaymentStatus] = useState('');
+  const [paymentStatus, setPaymentStatus] = useState({ status: '', startDate: '', endDate: '' });
   const [editId, setEditId] = useState(null);
 
   useEffect(() => {
@@ -29,9 +50,16 @@ const Dashboard = () => {
 
   const addMember = async () => {
     try {
-      const newMember = { name, age, phoneNumber, dateOfJoining, shift, paymentStatus };
-      const response = await axios.post('/members', newMember);
-      setMembers([...members, response.data]);
+      const newMember = {
+        name,
+        age,
+        phoneNumber,
+        dateOfJoining,
+        shift,
+        paymentStatus, // Ensure this is structured properly
+      };
+      await axios.post('/members', newMember);
+      fetchMembers();
       clearForm();
       toast.success('Member added successfully');
     } catch (error) {
@@ -42,7 +70,14 @@ const Dashboard = () => {
 
   const updateMember = async () => {
     try {
-      const updatedMember = { name, age, phoneNumber, dateOfJoining, shift, paymentStatus };
+      const updatedMember = {
+        name,
+        age,
+        phoneNumber,
+        dateOfJoining,
+        shift,
+        paymentStatus,
+      };
       const response = await axios.put(`/members/${editId}`, updatedMember);
       setMembers(members.map((member) => (member._id === editId ? response.data : member)));
       clearForm();
@@ -80,7 +115,7 @@ const Dashboard = () => {
     setPhoneNumber('');
     setDateOfJoining('');
     setShift('');
-    setPaymentStatus('');
+    setPaymentStatus({ status: '', startDate: '', endDate: '' });
   };
 
   const handleEdit = (member) => {
@@ -89,132 +124,140 @@ const Dashboard = () => {
     setPhoneNumber(member.phoneNumber);
     setDateOfJoining(member.dateOfJoining);
     setShift(member.shift);
-    setPaymentStatus(member.paymentStatus);
+    setPaymentStatus(member.paymentStatus || { status: '', startDate: '', endDate: '' }); // Ensure this matches the new structure
     setEditId(member._id);
   };
 
   return (
-    <div className="container mt-5">
-      <h1 className="mb-4">Dashboard</h1>
-      <div className="row">
-        <div className="col-md-4">
-          <h2>{editId ? 'Edit Member' : 'Add Member'}</h2>
-          <form onSubmit={handleSubmit}>
-            <div className="form-group">
-              <label>Name</label>
-              <input
-                type="text"
-                className="form-control"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                required
-              />
-            </div>
-            <div className="form-group">
-              <label>Age</label>
-              <input
-                type="number"
-                className="form-control"
-                value={age}
-                onChange={(e) => setAge(e.target.value)}
-                required
-              />
-            </div>
-            <div className="form-group">
-              <label>Phone Number</label>
-              <input
-                type="text"
-                className="form-control"
-                value={phoneNumber}
-                onChange={(e) => setPhoneNumber(e.target.value)}
-                required
-              />
-            </div>
-            <div className="form-group">
-              <label>Date of Joining</label>
-              <input
-                type="date"
-                className="form-control"
-                value={dateOfJoining}
-                onChange={(e) => setDateOfJoining(e.target.value)}
-                required
-              />
-            </div>
-            <div className="form-group">
-              <label>Shift</label>
-              <select
-                className="form-control"
-                value={shift}
-                onChange={(e) => setShift(e.target.value)}
-                required
-              >
-                <option value="">Select Shift</option>
-                <option value="morning">Morning</option>
-                <option value="evening">Evening</option>
-              </select>
-            </div>
-            <div className="form-group">
-              <label>Payment Status</label>
-              <select
-                className="form-control"
-                value={paymentStatus}
-                onChange={(e) => setPaymentStatus(e.target.value)}
-                required
-              >
-                <option value="">Select Payment Status</option>
-                <option value="paid">Paid</option>
-                <option value="unpaid">Unpaid</option>
-              </select>
-            </div>
-            <button type="submit" className="btn btn-primary mt-3">
-              {editId ? 'Update Member' : 'Add Member'}
-            </button>
-          </form>
-        </div>
-        <div className="col-md-8">
-          <h2>Members</h2>
-          <table className="table table-striped table-hover">
-            <thead className="thead-dark">
-              <tr>
-                <th>Name</th>
-                <th>Age</th>
-                <th>Phone Number</th>
-                <th>Date of Joining</th>
-                <th>Shift</th>
-                <th>Payment Status</th>
-                <th>Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {members.map((member) => (
-                <tr key={member._id}>
-                  <td>{member.name}</td>
-                  <td>{member.age}</td>
-                  <td>{member.phoneNumber}</td>
-                  <td>{member.dateOfJoining}</td>
-                  <td>{member.shift}</td>
-                  <td>{member.paymentStatus}</td>
-                  <td>
-                    <button
-                      className="btn btn-info mr-2"
-                      onClick={() => handleEdit(member)}
-                    >
-                      Edit
-                    </button>
-                    <button
-                      className="btn btn-danger"
-                      onClick={() => deleteMember(member._id)}
-                    >
-                      Delete
-                    </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </div>
-    </div>
+    <Layout>
+      <Container sx={{ mt: 4 }}>
+        <Typography variant="h4" gutterBottom>
+          Dashboard
+        </Typography>
+        <Grid container spacing={3}>
+          <Grid item xs={12} md={4}>
+            <Paper sx={{ padding: 2 }}>
+              <Typography variant="h6">{editId ? 'Edit Member' : 'Add Member'}</Typography>
+              <form onSubmit={handleSubmit}>
+                <TextField
+                  label="Name"
+                  variant="outlined"
+                  fullWidth
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  required
+                 
+                />
+                <TextField
+                  label="Age"
+                  type="number"
+                  variant="outlined"
+                  fullWidth
+                  value={age}
+                  onChange={(e) => setAge(e.target.value)}
+                  required
+               
+                />
+                <TextField
+                  label="Phone Number"
+                  variant="outlined"
+                  fullWidth
+                  value={phoneNumber}
+                  onChange={(e) => setPhoneNumber(e.target.value)}
+                  required
+                
+                />
+                <TextField
+                  label="Date of Joining"
+                  type="date"
+                  variant="outlined"
+                  fullWidth
+                  value={dateOfJoining}
+                  onChange={(e) => setDateOfJoining(e.target.value)}
+                  required
+        
+                  InputLabelProps={{
+                    shrink: true,
+                  }}
+                />
+                <Select
+                  label="Shift"
+                  variant="outlined"
+                  fullWidth
+                  value={shift}
+                  onChange={(e) => setShift(e.target.value)}
+                  required
+     
+                >
+                  <MenuItem value="">Select Shift</MenuItem>
+                  <MenuItem value="morning">Morning</MenuItem>
+                  <MenuItem value="evening">Evening</MenuItem>
+                </Select>
+                <Select
+                  label="Payment Status"
+                  variant="outlined"
+                  fullWidth
+                  value={paymentStatus.status} // Update to use status from the object
+                  onChange={(e) => setPaymentStatus({ ...paymentStatus, status: e.target.value })}
+                  required
+      
+                >
+                  <MenuItem value="">Select Payment Status</MenuItem>
+                  <MenuItem value="paid">Paid</MenuItem>
+                  <MenuItem value="unpaid">Unpaid</MenuItem>
+                </Select>
+                <Button type="submit" variant="contained" color="primary" sx={{ mt: 2 }}>
+                  {editId ? 'Update Member' : 'Add Member'}
+                </Button>
+              </form>
+            </Paper>
+          </Grid>
+          <Grid item xs={12} md={8}>
+            <Paper sx={{ padding: 2 }}>
+              <Typography variant="h6">Members</Typography>
+              <TableContainer>
+                <Table>
+                  <TableHead>
+                    <TableRow>
+                      <TableCell>Name</TableCell>
+                      <TableCell>Age</TableCell>
+                      <TableCell>Phone Number</TableCell>
+                      <TableCell>Date of Joining</TableCell>
+                      <TableCell>Shift</TableCell>
+                      <TableCell>Payment Status</TableCell>
+                      <TableCell>Actions</TableCell>
+                    </TableRow>
+                  </TableHead>
+                  <TableBody>
+                    {members.map((member) => (
+                      <TableRow key={member._id}>
+                        <TableCell>{member.name}</TableCell>
+                        <TableCell>{member.age}</TableCell>
+                        <TableCell>{member.phoneNumber}</TableCell>
+                        <TableCell>{new Date(member.dateOfJoining).toLocaleDateString()}</TableCell>
+                        <TableCell>{member.shift}</TableCell>
+                        <TableCell>{member.paymentStatus?.status || 'unpaid'}</TableCell> {/* Add fallback */}
+                        <TableCell>
+                          <IconButton onClick={() => handleEdit(member)}>
+                            <EditIcon color="primary" />
+                          </IconButton>
+                          <IconButton onClick={() => deleteMember(member._id)}>
+                            <DeleteIcon color="error" />
+                          </IconButton>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </TableContainer>
+            </Paper>
+          </Grid>
+        </Grid>
+        <Button variant="outlined" color="secondary" onClick={logout} sx={{ mt: 2 }}>
+          Logout
+        </Button>
+      </Container>
+    </Layout>
   );
 };
 

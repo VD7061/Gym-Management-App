@@ -1,1 +1,57 @@
+body {
+    width: 100%;
+    min-height: 100vh;
+    overflow: hidden;
+}
 
+.poppins {
+    font-family: "Poppins", sans-serif;
+}
+
+.poppins-thin { font-weight: 100; }
+.poppins-extralight { font-weight: 200; }
+.poppins-light { font-weight: 300; }
+.poppins-regular { font-weight: 400; }
+.poppins-medium { font-weight: 500; }
+.poppins-semibold { font-weight: 600; }
+.poppins-bold { font-weight: 700; }
+.poppins-extrabold { font-weight: 800; }
+.poppins-black { font-weight: 900; }
+
+.poppins-italic { font-style: italic; }
+.poppins-thin-italic { font-weight: 100; font-style: italic; }
+.poppins-extralight-italic { font-weight: 200; font-style: italic; }
+.poppins-light-italic { font-weight: 300; font-style: italic; }
+.poppins-regular-italic { font-weight: 400; font-style: italic; }
+.poppins-medium-italic { font-weight: 500; font-style: italic; }
+.poppins-semibold-italic { font-weight: 600; font-style: italic; }
+.poppins-bold-italic { font-weight: 700; font-style: italic; }
+.poppins-extrabold-italic { font-weight: 800; font-style: italic; }
+.poppins-black-italic { font-weight: 900; font-style: italic; }
+
+
+.spinner {
+    width: 24px; /* Adjust the size as needed */
+    height: 24px;
+    animation: spinner-c601d3 1s infinite;
+    background-color: #ffffff;
+    border-radius: 50%;
+    margin: auto; /* Center the spinner within the button */
+  }
+  
+  @keyframes spinner-c601d3 {
+    0% {
+      opacity: 0;
+      transform: scale(0) translateX(-300%);
+    }
+  
+    50% {
+      opacity: 1;
+      transform: scale(1.25) translateX(0);
+    }
+  
+    100% {
+      opacity: 0;
+      transform: scale(0) translateX(300%);
+    }
+  }

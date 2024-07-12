@@ -11,7 +11,7 @@ const test = (req, res) => {
 //register endpoint
 const registerUser = async (req, res) => {
   try {
-    const { name, email, password } = req.body;
+    const { name, email, password,gymName  } = req.body;
     //check if name was entered
     if (!name) {
       return res.json({
@@ -40,6 +40,7 @@ const registerUser = async (req, res) => {
       name,
       email,
       password: hashedPassword,
+      gymName, 
     });
 
     return res.json(user);
@@ -54,39 +55,24 @@ const registerUser = async (req, res) => {
 const loginUser = async (req, res) => {
   try {
     const { email, password } = req.body;
+    console.log('Login attempt:', { email, password });
 
-    // Check if user exists
     const user = await User.findOne({ email });
     if (!user) {
-      return res.status(404).json({
-        error: 'User does not exist',
-      });
+      return res.status(404).json({ error: "User does not exist" });
     }
 
-    // Check if password matches
     const match = await comparePassword(password, user.password);
     if (!match) {
-      return res.status(401).json({
-        error: 'Password is incorrect',
-      });
+      return res.status(401).json({ error: "Password is incorrect" });
     }
 
-    // Generate JWT token
     const token = generateToken(user);
-
-    // Set cookie and send response
-    res.cookie('token', token, { httpOnly: true });
-    res.json({
-      token: token,
-      user: {
-        id: user._id,
-        name: user.name,
-        email: user.email,
-      },
-    });
+    res.cookie('token', token, { httpOnly: true, secure: true });
+    res.json({ token, user: { id: user._id, name: user.name, email: user.email } });
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ error: 'Server error' });
+    console.error('Login error:', error);
+    res.status(500).json({ error: "Server error" });
   }
 };
 

@@ -29,6 +29,7 @@ const userSchema = new Schema({
     unique: true,
   },
   password: String,
+  gymName: String, 
   members: [memberDetailsSchema], 
 });
 

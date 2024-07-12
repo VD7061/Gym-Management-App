@@ -1,17 +1,16 @@
-// util/jwtUtils.js
 const jwt = require('jsonwebtoken');
 const User = require('../Models/user.js');
 
 const generateToken = (user) => {
   return jwt.sign(
-    { email: user.email, id: user._id, name: user.name },
+    { id: user._id, name: user.name, email: user.email },
     process.env.JWT_SECRET_KEY,
     { expiresIn: '1h' }
   );
 };
 
 const verifyToken = async (req, res, next) => {
-  const token = req.cookies.token;
+  const token = req.cookies.token || req.header("Authorization");
   if (!token) {
     return res.status(403).json({ error: 'No token provided' });
   }
@@ -22,7 +21,7 @@ const verifyToken = async (req, res, next) => {
     if (!user) {
       return res.status(404).json({ error: 'User not found' });
     }
-    req.user = { id: user._id }; // Attach user ID to request object
+    req.user = { id: user._id };
     next();
   } catch (error) {
     console.error(error);
