@@ -1,23 +1,17 @@
-import React, { useEffect } from 'react';
+import React from 'react';
 import { Navigate } from 'react-router-dom';
 import { useAuth } from './AuthContext';
-import toast from 'react-hot-toast';
+import Layout from '../Pages/Layout';
 
 const ProtectedRoute = ({ children }) => {
   const { isAuthenticated } = useAuth();
-
-  useEffect(() => {
-    const token = localStorage.getItem('token');
-    if (!token) {
-      toast.error('You must be logged in to view this page');
-    }
-  }, [isAuthenticated]);
+  console.log('ProtectedRoute - isAuthenticated:', isAuthenticated);
 
   if (!isAuthenticated) {
     return <Navigate to="/login" replace />;
   }
 
-  return children;
+  return <Layout>{children}</Layout>; // Wrap children with Layout
 };
 
 export default ProtectedRoute;

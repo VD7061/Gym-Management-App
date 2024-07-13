@@ -137,7 +137,7 @@ const Register = () => {
                       </Button>
                       <div className="text-center mt-3">
                         <span style={{ color: "#7707A0", fontSize: "15px" }}>Already have an account?</span>
-                        <Link to="/login" style={{ color: "#7707A0", fontSize: "15px" }}> Log In</Link>
+                        <Link to="/" style={{ color: "#7707A0", fontSize: "15px" }}> Log In</Link>
                       </div>
                     </Form>
                   )}

@@ -10,10 +10,12 @@ const generateToken = (user) => {
 };
 
 const verifyToken = async (req, res, next) => {
-  const token = req.cookies.token || req.header("Authorization");
+  const token = req.cookies.token || req.header("Authorization")?.split(" ")[1];
   if (!token) {
     return res.status(403).json({ error: 'No token provided' });
   }
+
+  console.log('Token received:', token); // Log the received token for debugging purposes
 
   try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET_KEY);
