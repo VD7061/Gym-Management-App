@@ -8,6 +8,7 @@ import ProtectedRoute from './Context/ProtectedRoute';
 import AddMember from './Pages/AddMembers';
 import ManageMembers from './Pages/ManageMembers';
 import { Toaster } from 'react-hot-toast';
+import EditMember from './Pages/EditMember';
 
 
 // Set the default base URL for axios
@@ -25,6 +26,7 @@ const App = () => {
       <Route path="/" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
       <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
       <Route path="/addmember" element={<ProtectedRoute><AddMember /></ProtectedRoute>} />
+      <Route path="/edit-member/:id" element={<ProtectedRoute><EditMember /></ProtectedRoute>} />
       <Route path="/members" element={<ProtectedRoute><ManageMembers /></ProtectedRoute>} />
     
     </Routes>

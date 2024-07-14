@@ -1,6 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { useParams } from 'react-router-dom';
-import axios from 'axios';
+import React, { useEffect, useState } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
 import {
   Card,
   CardContent,
@@ -11,15 +10,17 @@ import {
   Box,
   CircularProgress,
 } from '@mui/material';
+import axios from 'axios';
 import { toast } from 'react-hot-toast';
 
-const AddMember = () => {
-  const { id } = useParams(); 
+const EditMember = () => {
+  const { id } = useParams();
+  const navigate = useNavigate();
   const [member, setMember] = useState({
     name: '',
     age: '',
     phoneNumber: '',
-    dateOfJoining: new Date().toISOString().split('T')[0], // Default to today
+    dateOfJoining: '',
     shift: 'morning',
     paymentStatus: {
       status: 'unpaid',
@@ -31,21 +32,20 @@ const AddMember = () => {
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    if (id) {
-      const fetchMember = async () => {
-        setLoading(true);
-        try {
-          const response = await axios.get(`/members/${id}`);
-          setMember(response.data);
-        } catch (error) {
-          console.error('Error fetching member:', error);
-          toast.error('Failed to load member.');
-        } finally {
-          setLoading(false);
-        }
-      };
-      fetchMember();
-    }
+    const fetchMember = async () => {
+      setLoading(true);
+      try {
+        const response = await axios.get(`/members/${id}`);
+        setMember(response.data);
+      } catch (error) {
+        console.error('Error fetching member:', error);
+        toast.error('Failed to load member details.');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchMember();
   }, [id]);
 
   const handleChange = (e) => {
@@ -77,32 +77,16 @@ const AddMember = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!validateDates()) return; // Validate dates before submission
+    if (!validateDates()) return;
 
     try {
       setLoading(true);
-      if (id) {
-        await axios.put(`/members/${id}`, member);
-        toast.success('Member updated successfully!');
-      } else {
-        await axios.post('/members', member);
-        toast.success('Member added successfully!');
-        setMember({
-          name: '',
-          age: '',
-          phoneNumber: '',
-          dateOfJoining: new Date().toISOString().split('T')[0],
-          shift: 'morning',
-          paymentStatus: {
-            status: 'unpaid',
-            startDate: '',
-            endDate: '',
-          },
-        });
-      }
+      await axios.put(`/members/${id}`, member);
+      toast.success('Member updated successfully!');
+      navigate('/members'); // Navigate back after successful update
     } catch (error) {
-      console.error('Error saving member:', error);
-      toast.error('Failed to save member. Please try again.');
+      console.error('Error updating member:', error);
+      toast.error('Failed to update member. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -110,7 +94,7 @@ const AddMember = () => {
 
   return (
     <Card variant="outlined" sx={{ maxWidth: 600, margin: 'auto', mt: 5 }}>
-      <CardHeader title={id ? "Edit Member" : "Add Member"} />
+      <CardHeader title="Edit Member" />
       <CardContent>
         {loading ? (
           <Box display="flex" justifyContent="center" alignItems="center" height="200px">
@@ -145,7 +129,7 @@ const AddMember = () => {
                 label="Date of Joining"
                 name="dateOfJoining"
                 type="date"
-                value={member.dateOfJoining}
+                value={member.dateOfJoining.split('T')[0]} // Format date for input
                 onChange={handleChange}
                 required
                 InputLabelProps={{ shrink: true }}
@@ -178,7 +162,7 @@ const AddMember = () => {
                     label="Payment Start Date"
                     name="paymentStatus.startDate"
                     type="date"
-                    value={member.paymentStatus.startDate}
+                    value={member.paymentStatus.startDate.split('T')[0]} // Format date for input
                     onChange={handleChange}
                     required
                     InputLabelProps={{ shrink: true }}
@@ -187,7 +171,7 @@ const AddMember = () => {
                     label="Payment End Date"
                     name="paymentStatus.endDate"
                     type="date"
-                    value={member.paymentStatus.endDate}
+                    value={member.paymentStatus.endDate.split('T')[0]} // Format date for input
                     onChange={handleChange}
                     required
                     InputLabelProps={{ shrink: true }}
@@ -195,7 +179,7 @@ const AddMember = () => {
                 </>
               )}
               <Button variant="contained" type="submit" sx={{ mt: 2 }}>
-                {id ? "Update Member" : "Add Member"}
+                Update Member
               </Button>
             </Box>
           </form>
@@ -205,4 +189,4 @@ const AddMember = () => {
   );
 };
 
-export default AddMember;
+export default EditMember;

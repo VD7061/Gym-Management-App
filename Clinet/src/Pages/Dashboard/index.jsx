@@ -1,51 +1,71 @@
-import React, { useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import { useAuth } from '../../Context/AuthContext';
+import React, { useEffect, useState } from 'react';
+import axios from 'axios';
+import { Bar } from 'react-chartjs-2';
+import { Card, CardContent, Grid, Typography } from '@mui/material';
+import { Box } from '@mui/system';
+import { Chart as ChartJS, CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend } from 'chart.js';
+
+// Register the Chart.js components
+ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend);
 
 const Dashboard = () => {
-  const { logout, isAuthenticated } = useAuth();
-  const navigate = useNavigate();
+  const [members, setMembers] = useState([]);
 
   useEffect(() => {
-    if (!isAuthenticated) {
-      navigate('/login');
-    }
-  }, [isAuthenticated, navigate]);
+    const fetchMembers = async () => {
+      try {
+        const response = await axios.get('http://localhost:5000/members', { withCredentials: true });
+        setMembers(response.data);
+      } catch (error) {
+        console.error('Error fetching members:', error);
+      }
+    };
+
+    fetchMembers();
+  }, []);
+
+  const joiningDates = members.map(member => new Date(member.dateOfJoining));
+  const joiningMonths = joiningDates.map(date => date.getMonth());
+
+  const chartData = {
+    labels: ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'],
+    datasets: [
+      {
+        label: 'Members Joined',
+        data: joiningMonths.reduce((acc, month) => {
+          acc[month] = (acc[month] || 0) + 1;
+          return acc;
+        }, new Array(12).fill(0)),
+        backgroundColor: 'rgba(75,192,192,0.4)',
+        borderColor: 'rgba(75,192,192,1)',
+        borderWidth: 1,
+      },
+    ],
+  };
 
   return (
-    <div className="dashboard">
-      <h2>Dashboard</h2>
-      <nav>
-        <Link to="/addmember">Add Member</Link>
-        <Link to="/members">View Members</Link>
-        <button onClick={logout}>Logout</button>
-      </nav>
+    <Box>
+      <Grid container spacing={2}>
+        {/* Card to show total members */}
+        <Grid item xs={12} md={4}>
+          <Card>
+            <CardContent>
+              <Typography variant="h5">Total Members</Typography>
+              <Typography variant="h2">{members.length}</Typography>
+            </CardContent>
+          </Card>
+        </Grid>
 
-      <div className="dashboard-content">
-        <h3>Welcome to Your Gym Management System!</h3>
-        <p>Here you can manage all your gym members, track payments, and more.</p>
-
-        <h4>Quick Links:</h4>
-        <ul>
-          <li>
-            <Link to="/addmember">Add New Member</Link>
-          </li>
-          <li>
-            <Link to="/members">View All Members</Link>
-          </li>
-          <li>
-            <Link to="/payments">Manage Payments</Link>
-          </li>
-        </ul>
-
-        <h4>Statistics:</h4>
-        <div className="stats">
-          <p>Total Members: <strong>100</strong></p>
-          <p>Active Members: <strong>80</strong></p>
-          <p>Pending Payments: <strong>20</strong></p>
-        </div>
-      </div>
-    </div>
+       
+        <Grid item xs={12} md={8}>
+          <Card>
+            <CardContent>
+              <Bar data={chartData} />
+            </CardContent>
+          </Card>
+        </Grid>
+      </Grid>
+    </Box>
   );
 };
 

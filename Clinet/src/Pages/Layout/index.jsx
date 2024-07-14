@@ -219,12 +219,16 @@ const Layout = ({ children }) => {
           </ListItem>
         </List>
       </Drawer>
-      <Box component="main" sx={{ flexGrow: 1, p: 3 }}>
-        <DrawerHeader />
-        <Container>
-          {children}
-        </Container>
-      </Box>
+      {/* <Box  sx={{ p: 1, width: '100%', height: '100vh' }}>
+  <DrawerHeader />
+  <Container>
+    {children}
+  </Container>
+</Box> */}
+
+<main style={{ flexGrow: 1, padding: '24px', marginTop: '64px' }}>
+        {children}
+      </main>
     </Box>
   );
 };
