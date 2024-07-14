@@ -176,6 +176,54 @@ const getMemberById = async (req, res) => {
   }
 };
 
+
+const getDashboardData = async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const user = await User.findById(userId).populate('members');
+
+    if (!user) {
+      return res.status(404).json({ error: "User not found" });
+    }
+
+    const totalMembers = user.members.length;
+    const activeMembers = user.members.filter(member => member.paymentStatus.status === 'paid').length;
+
+    const memberStats = {};
+    user.members.forEach(member => {
+      const month = member.dateOfJoining.toLocaleString('default', { month: 'long' });
+      memberStats[month] = (memberStats[month] || 0) + 1;
+    });
+
+    const monthlyData = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December']
+      .map(month => memberStats[month] || 0);
+
+    // Check for upcoming payment expirations
+    const currentDate = new Date();
+    const notifications = user.members
+      .filter(member => member.paymentStatus.status === 'paid' && member.paymentStatus.endDate)
+      .filter(member => {
+        const expirationDate = new Date(member.paymentStatus.endDate);
+        const timeDiff = expirationDate - currentDate;
+        return timeDiff > 0 && timeDiff <= 5 * 24 * 60 * 60 * 1000; // 5 days in milliseconds
+      })
+      .map(member => ({
+        message: `${member.name}'s payment is due in ${Math.ceil((new Date(member.paymentStatus.endDate) - currentDate) / (1000 * 60 * 60 * 24))} days!`,
+      }));
+
+    res.json({
+      totalMembers,
+      activeMembers,
+      monthlyData,
+      notifications,
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Server error" });
+  }
+};
+
+
 module.exports = {
   addMember,
   getMembers,
@@ -183,4 +231,5 @@ module.exports = {
   deleteMember,
   getUserDetails,
   getMemberById,
+  getDashboardData
 };

@@ -4,12 +4,12 @@ import axios from 'axios';
 import {
   Card,
   CardContent,
-  CardHeader,
   TextField,
   Button,
   MenuItem,
   Box,
   CircularProgress,
+  Typography,
 } from '@mui/material';
 import { toast } from 'react-hot-toast';
 
@@ -109,99 +109,109 @@ const AddMember = () => {
   };
 
   return (
-    <Card variant="outlined" sx={{ maxWidth: 600, margin: 'auto', mt: 5 }}>
-      <CardHeader title={id ? "Edit Member" : "Add Member"} />
-      <CardContent>
-        {loading ? (
-          <Box display="flex" justifyContent="center" alignItems="center" height="200px">
-            <CircularProgress />
-          </Box>
-        ) : (
-          <form onSubmit={handleSubmit}>
-            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-              <TextField
-                label="Name"
-                name="name"
-                value={member.name}
-                onChange={handleChange}
-                required
-              />
-              <TextField
-                label="Age"
-                name="age"
-                type="number"
-                value={member.age}
-                onChange={handleChange}
-                required
-              />
-              <TextField
-                label="Phone Number"
-                name="phoneNumber"
-                value={member.phoneNumber}
-                onChange={handleChange}
-                required
-              />
-              <TextField
-                label="Date of Joining"
-                name="dateOfJoining"
-                type="date"
-                value={member.dateOfJoining}
-                onChange={handleChange}
-                required
-                InputLabelProps={{ shrink: true }}
-              />
-              <TextField
-                select
-                label="Shift"
-                name="shift"
-                value={member.shift}
-                onChange={handleChange}
-                required
-              >
-                <MenuItem value="morning">Morning</MenuItem>
-                <MenuItem value="evening">Evening</MenuItem>
-              </TextField>
-              <TextField
-                select
-                label="Payment Status"
-                name="paymentStatus.status"
-                value={member.paymentStatus.status}
-                onChange={handleChange}
-                required
-              >
-                <MenuItem value="paid">Paid</MenuItem>
-                <MenuItem value="unpaid">Unpaid</MenuItem>
-              </TextField>
-              {member.paymentStatus.status === 'paid' && (
-                <>
-                  <TextField
-                    label="Payment Start Date"
-                    name="paymentStatus.startDate"
-                    type="date"
-                    value={member.paymentStatus.startDate}
-                    onChange={handleChange}
-                    required
-                    InputLabelProps={{ shrink: true }}
-                  />
-                  <TextField
-                    label="Payment End Date"
-                    name="paymentStatus.endDate"
-                    type="date"
-                    value={member.paymentStatus.endDate}
-                    onChange={handleChange}
-                    required
-                    InputLabelProps={{ shrink: true }}
-                  />
-                </>
-              )}
-              <Button variant="contained" type="submit" sx={{ mt: 2 }}>
-                {id ? "Update Member" : "Add Member"}
-              </Button>
+    <Box sx={{ padding: '10px', marginTop: '15px' }}>
+      <Box sx={{ display: 'flex', flexDirection: 'column', mb: 2 }}>
+        <Typography variant="subtitle2" component="p" color="textSecondary">
+          Overview
+        </Typography>
+        <Typography variant="h6" component="h1" sx={{ mb: 2 }}>
+          Add Members
+        </Typography>
+      </Box>
+      
+      <Card variant="elevation" sx={{ maxWidth: "100%", mt: 3, boxShadow: "5", borderRadius: "10px" }}>
+        <CardContent>
+          {loading ? (
+            <Box display="flex" justifyContent="center" alignItems="center" height="200px">
+              <CircularProgress />
             </Box>
-          </form>
-        )}
-      </CardContent>
-    </Card>
+          ) : (
+            <form onSubmit={handleSubmit}>
+              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                <TextField
+                  label="Name"
+                  name="name"
+                  value={member.name}
+                  onChange={handleChange}
+                  required
+                />
+                <TextField
+                  label="Age"
+                  name="age"
+                  type="number"
+                  value={member.age}
+                  onChange={handleChange}
+                  required
+                />
+                <TextField
+                  label="Phone Number"
+                  name="phoneNumber"
+                  value={member.phoneNumber}
+                  onChange={handleChange}
+                  required
+                />
+                <TextField
+                  label="Date of Joining"
+                  name="dateOfJoining"
+                  type="date"
+                  value={member.dateOfJoining}
+                  onChange={handleChange}
+                  required
+                  InputLabelProps={{ shrink: true }}
+                />
+                <TextField
+                  select
+                  label="Shift"
+                  name="shift"
+                  value={member.shift}
+                  onChange={handleChange}
+                  required
+                >
+                  <MenuItem value="morning">Morning</MenuItem>
+                  <MenuItem value="evening">Evening</MenuItem>
+                </TextField>
+                <TextField
+                  select
+                  label="Payment Status"
+                  name="paymentStatus.status"
+                  value={member.paymentStatus.status}
+                  onChange={handleChange}
+                  required
+                >
+                  <MenuItem value="paid">Paid</MenuItem>
+                  <MenuItem value="unpaid">Unpaid</MenuItem>
+                </TextField>
+                {member.paymentStatus.status === 'paid' && (
+                  <>
+                    <TextField
+                      label="Payment Start Date"
+                      name="paymentStatus.startDate"
+                      type="date"
+                      value={member.paymentStatus.startDate}
+                      onChange={handleChange}
+                      required
+                      InputLabelProps={{ shrink: true }}
+                    />
+                    <TextField
+                      label="Payment End Date"
+                      name="paymentStatus.endDate"
+                      type="date"
+                      value={member.paymentStatus.endDate}
+                      onChange={handleChange}
+                      required
+                      InputLabelProps={{ shrink: true }}
+                    />
+                  </>
+                )}
+                <Button variant="contained" type="submit" sx={{ mt: 2 }}>
+                  {id ? "Update Member" : "Add Member"}
+                </Button>
+              </Box>
+            </form>
+          )}
+        </CardContent>
+      </Card>
+    </Box>
   );
 };
 

@@ -23,7 +23,8 @@ import {
   DialogContent,
   DialogContentText,
   DialogTitle,
-  Button
+  Button,
+  useMediaQuery
 } from '@mui/material';
 import { Delete, Edit } from '@mui/icons-material';
 import { toast } from 'react-hot-toast';
@@ -36,15 +37,7 @@ const ManageMembers = () => {
   const [openDialog, setOpenDialog] = useState(false);
   const [selectedMemberId, setSelectedMemberId] = useState(null);
   const navigate = useNavigate();
-
-  const getRandomColor = () => {
-    const letters = '0123456789ABCDEF';
-    let color = '#';
-    for (let i = 0; i < 6; i++) {
-      color += letters[Math.floor(Math.random() * 16)];
-    }
-    return color;
-  };
+  const isMobile = useMediaQuery('(max-width:600px)');
 
   useEffect(() => {
     const fetchMembers = async () => {
@@ -107,20 +100,28 @@ const ManageMembers = () => {
     if (paymentStatus.status === 'unpaid') {
       return 'N/A';
     }
-    
+
     const currentDate = new Date();
     const end = new Date(paymentStatus.endDate);
-    const start = new Date(paymentStatus.startDate);
     
     // Check if the current date is past the end date
     if (currentDate > end) {
       return 0; // or return a message like 'Expired'
     }
-  
+
     const diffTime = Math.abs(end - currentDate);
     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
     return diffDays;
   };
+
+    const getRandomColor = () => {
+    const colors = [
+      '#FF5733', '#33FF57', '#3357FF', '#FF33A1',
+      '#F1C40F', '#8E44AD', '#3498DB', '#E67E22'
+    ];
+    return colors[Math.floor(Math.random() * colors.length)];
+  };
+
 
   return (
     <Box sx={{ padding: '10px', marginTop: '15px' }}>
@@ -133,7 +134,7 @@ const ManageMembers = () => {
         </Typography>
       </Box>
 
-      <Card variant="outlined">
+      <Card variant="elevation" sx={{ boxShadow:"5" , borderRadius: "10px"}}>
         <CardContent>
           <Grid container justifyContent="flex-end" sx={{ mb: 2 }}>
             <Grid item xs={12} sm={6}>
@@ -146,117 +147,149 @@ const ManageMembers = () => {
               />
             </Grid>
           </Grid>
-          <div style={{ maxHeight: '600px', overflow: 'auto' }}>
-            <TableContainer component={Paper}>
-              <Table>
-                <TableHead>
-                  <TableRow>
-                    <TableCell>
-                      <TableSortLabel
-                        active={sortColumn === 'name'}
-                        direction={sortColumn === 'name' ? sortDirection : 'asc'}
-                        onClick={() => handleSort('name')}
-                      >
-                        Name
-                      </TableSortLabel>
-                    </TableCell>
-                    <TableCell>
-                      <TableSortLabel
-                        active={sortColumn === 'age'}
-                        direction={sortColumn === 'age' ? sortDirection : 'asc'}
-                        onClick={() => handleSort('age')}
-                      >
-                        Age
-                      </TableSortLabel>
-                    </TableCell>
-                    <TableCell>
-                      <TableSortLabel
-                        active={sortColumn === 'phoneNumber'}
-                        direction={sortColumn === 'phoneNumber' ? sortDirection : 'asc'}
-                        onClick={() => handleSort('phoneNumber')}
-                      >
-                        Phone Number
-                      </TableSortLabel>
-                    </TableCell>
-                    <TableCell>
-                      <TableSortLabel
-                        active={sortColumn === 'dateOfJoining'}
-                        direction={sortColumn === 'dateOfJoining' ? sortDirection : 'asc'}
-                        onClick={() => handleSort('dateOfJoining')}
-                      >
-                        Date of Joining
-                      </TableSortLabel>
-                    </TableCell>
-                    <TableCell>
-                      <TableSortLabel
-                        active={sortColumn === 'shift'}
-                        direction={sortColumn === 'shift' ? sortDirection : 'asc'}
-                        onClick={() => handleSort('shift')}
-                      >
-                        Shift
-                      </TableSortLabel>
-                    </TableCell>
-                    <TableCell>
-                      <TableSortLabel
-                        active={sortColumn === 'paymentStatus.status'}
-                        direction={sortColumn === 'paymentStatus.status' ? sortDirection : 'asc'}
-                        onClick={() => handleSort('paymentStatus.status')}
-                      >
-                        Payment Status
-                      </TableSortLabel>
-                    </TableCell>
-                    <TableCell>
-                      <TableSortLabel
-                        active={sortColumn === 'daysRemaining'}
-                        direction={sortColumn === 'daysRemaining' ? sortDirection : 'asc'}
-                        onClick={() => handleSort('daysRemaining')}
-                      >
-                        Days Remaining
-                      </TableSortLabel>
-                    </TableCell>
-                    <TableCell>Actions</TableCell>
-                  </TableRow>
-                </TableHead>
-                <TableBody>
-                  {sortedMembers.map((member) => (
-                    <TableRow key={member._id}>
-                      <TableCell>
-                        <Box display="flex" alignItems="center">
-                          <Avatar sx={{ bgcolor: getRandomColor(), mr: 3 }}>
-                            {member.name.charAt(0)}
-                          </Avatar>
-                          {member.name}
-                        </Box>
-                      </TableCell>
-                      <TableCell>{member.age}</TableCell>
-                      <TableCell>{member.phoneNumber}</TableCell>
-                      <TableCell>{new Date(member.dateOfJoining).toLocaleDateString()}</TableCell>
-                      <TableCell>{member.shift}</TableCell>
-                      <TableCell>{member.paymentStatus.status}</TableCell>
-                      <TableCell>
-                        {calculateDaysRemaining(member.paymentStatus)}
-                      </TableCell>
-                      <TableCell>
+
+
+          {isMobile ? (
+          
+            <Grid container spacing={2}>
+              {sortedMembers.map((member) => (
+                <Grid item xs={12} sm={6} key={member._id}>
+                  <Card>
+                    <CardContent>
+                    <Box display="flex" flexDirection="column" alignItems="flex-start">
+  <Avatar sx={{ bgcolor: getRandomColor(), mr: 2 }}>
+    {member.name.charAt(0)}
+  </Avatar>
+  <Typography variant="h8">{member.name}</Typography>
+  <Typography variant="h8">{member.phoneNumber}</Typography>
+  <Typography variant="h8">{member.shift}</Typography>
+ 
+  <Typography variant="h8">{calculateDaysRemaining(member.paymentStatus)}</Typography>
+</Box>  
+
+                      <Typography>Payment Status: {member.paymentStatus.status}</Typography>
+                      <Box sx={{ mt: 2 }}>
                         <IconButton onClick={() => navigate(`/edit-member/${member._id}`)}>
                           <Edit />
                         </IconButton>
                         <IconButton onClick={() => handleOpenDialog(member._id)}>
                           <Delete />
                         </IconButton>
+                      </Box>
+                    </CardContent>
+                  </Card>
+                </Grid>
+              ))}
+            </Grid>
+          ) : (
+            // Render table for larger screens
+            <div style={{ maxHeight: '600px', overflow: 'auto' }}>
+              <TableContainer component={Paper}>
+                <Table>
+                  <TableHead>
+                    <TableRow>
+                      <TableCell>
+                        <TableSortLabel
+                          active={sortColumn === 'name'}
+                          direction={sortColumn === 'name' ? sortDirection : 'asc'}
+                          onClick={() => handleSort('name')}
+                        >
+                          Name
+                        </TableSortLabel>
                       </TableCell>
+                      <TableCell>
+                        <TableSortLabel
+                          active={sortColumn === 'age'}
+                          direction={sortColumn === 'age' ? sortDirection : 'asc'}
+                          onClick={() => handleSort('age')}
+                        >
+                          Age
+                        </TableSortLabel>
+                      </TableCell>
+                      <TableCell>
+                        <TableSortLabel
+                          active={sortColumn === 'phoneNumber'}
+                          direction={sortColumn === 'phoneNumber' ? sortDirection : 'asc'}
+                          onClick={() => handleSort('phoneNumber')}
+                        >
+                          Phone Number
+                        </TableSortLabel>
+                      </TableCell>
+                      <TableCell>
+                        <TableSortLabel
+                          active={sortColumn === 'dateOfJoining'}
+                          direction={sortColumn === 'dateOfJoining' ? sortDirection : 'asc'}
+                          onClick={() => handleSort('dateOfJoining')}
+                        >
+                          Date of Joining
+                        </TableSortLabel>
+                      </TableCell>
+                      <TableCell>
+                        <TableSortLabel
+                          active={sortColumn === 'shift'}
+                          direction={sortColumn === 'shift' ? sortDirection : 'asc'}
+                          onClick={() => handleSort('shift')}
+                        >
+                          Shift
+                        </TableSortLabel>
+                      </TableCell>
+                      <TableCell>
+                        <TableSortLabel
+                          active={sortColumn === 'paymentStatus.status'}
+                          direction={sortColumn === 'paymentStatus.status' ? sortDirection : 'asc'}
+                          onClick={() => handleSort('paymentStatus.status')}
+                        >
+                          Payment Status
+                        </TableSortLabel>
+                      </TableCell>
+                      <TableCell>
+                        <TableSortLabel
+                          active={sortColumn === 'daysRemaining'}
+                          direction={sortColumn === 'daysRemaining' ? sortDirection : 'asc'}
+                          onClick={() => handleSort('daysRemaining')}
+                        >
+                          Days Remaining
+                        </TableSortLabel>
+                      </TableCell>
+                      <TableCell>Actions</TableCell>
                     </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </TableContainer>
-          </div>
+                  </TableHead>
+                  <TableBody>
+                    {sortedMembers.map((member) => (
+                      <TableRow key={member._id}>
+                        <TableCell>
+                          <Box display="flex" alignItems="center">
+                            <Avatar sx={{ bgcolor: getRandomColor(), mr: 3 }}>
+                              {member.name.charAt(0)}
+                            </Avatar>
+                            {member.name}
+                          </Box>
+                        </TableCell>
+                        <TableCell>{member.age}</TableCell>
+                        <TableCell>{member.phoneNumber}</TableCell>
+                        <TableCell>{new Date(member.dateOfJoining).toLocaleDateString()}</TableCell>
+                        <TableCell>{member.shift}</TableCell>
+                        <TableCell>{member.paymentStatus.status}</TableCell>
+                        <TableCell>{calculateDaysRemaining(member.paymentStatus)}</TableCell>
+                        <TableCell>
+                          <IconButton onClick={() => navigate(`/edit-member/${member._id}`)}>
+                            <Edit />
+                          </IconButton>
+                          <IconButton onClick={() => handleOpenDialog(member._id)}>
+                            <Delete />
+                          </IconButton>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </TableContainer>
+            </div>
+          )}
         </CardContent>
       </Card>
 
-      <Dialog
-        open={openDialog}
-        onClose={handleCloseDialog}
-      >
+      <Dialog open={openDialog} onClose={handleCloseDialog}>
         <DialogTitle>Confirm Delete</DialogTitle>
         <DialogContent>
           <DialogContentText>

@@ -2,7 +2,7 @@ const express = require("express");
 const router = express.Router();
 const cors = require("cors");
 const { test, registerUser, loginUser } = require("../controllers/authControllers.js");
-const { addMember, getMembers, updateMember, deleteMember, getUserDetails, getMemberById } = require('../controllers/memberController.js');
+const { addMember, getMembers, updateMember, deleteMember, getUserDetails, getMemberById, getDashboardData } = require('../controllers/memberController.js');
 const { verifyToken } = require('../util/jwtUtils.js');
 
 // middleware
@@ -23,6 +23,8 @@ router.put('/members/:memberId', verifyToken, updateMember);
 router.delete('/members/:memberId', verifyToken, deleteMember);
 router.get('/details', verifyToken, getUserDetails);
 router.get('/members/:memberId', verifyToken, getMemberById);
+router.get('/dashboard', verifyToken, getDashboardData);
+
 
 
 module.exports = router;
