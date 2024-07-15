@@ -172,7 +172,7 @@ const EditMember = () => {
                       label="Payment Start Date"
                       name="paymentStatus.startDate"
                       type="date"
-                      value={member.paymentStatus.startDate.split('T')[0]} // Format date for input
+                      value={member.paymentStatus.startDate ? member.paymentStatus.startDate.split('T')[0] : ''} // Format date for input
                       onChange={handleChange}
                       required
                       InputLabelProps={{ shrink: true }}
@@ -181,7 +181,7 @@ const EditMember = () => {
                       label="Payment End Date"
                       name="paymentStatus.endDate"
                       type="date"
-                      value={member.paymentStatus.endDate.split('T')[0]} // Format date for input
+                      value={member.paymentStatus.endDate ? member.paymentStatus.endDate.split('T')[0] : ''} // Format date for input
                       onChange={handleChange}
                       required
                       InputLabelProps={{ shrink: true }}

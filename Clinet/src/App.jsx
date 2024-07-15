@@ -11,7 +11,7 @@ import { Toaster } from 'react-hot-toast';
 import EditMember from './Pages/EditMember';
 
 
-// Set the default base URL for axios
+
 axios.defaults.baseURL = 'http://localhost:5000'; // Update with your production URL
 
 
