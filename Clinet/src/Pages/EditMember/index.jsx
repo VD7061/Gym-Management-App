@@ -27,6 +27,7 @@ const EditMember = () => {
       status: 'unpaid',
       startDate: '',
       endDate: '',
+      amount: '', // Add amount field
     },
   });
 
@@ -104,7 +105,7 @@ const EditMember = () => {
         </Typography>
       </Box>
 
-      <Card variant="elevation" sx={{ maxWidth: "100%", mt: 3, boxShadow:"5" , borderRadius: "10px"}}>
+      <Card variant="elevation" sx={{ maxWidth: "100%", mt: 3, boxShadow:"5", borderRadius: "10px"}}>
         <CardContent>
           {loading ? (
             <Box display="flex" justifyContent="center" alignItems="center" height="200px">
@@ -185,6 +186,14 @@ const EditMember = () => {
                       onChange={handleChange}
                       required
                       InputLabelProps={{ shrink: true }}
+                    />
+                    <TextField
+                      label="Amount"
+                      name="paymentStatus.amount"
+                      type="number"
+                      value={member.paymentStatus.amount}
+                      onChange={handleChange}
+                      required
                     />
                   </>
                 )}

@@ -35,7 +35,6 @@ const memberDetailsSchema = new Schema({
       type: Date,
       validate: {
         validator: function (v) {
-          // If status is paid, startDate should be present
           return this.paymentStatus.status === 'unpaid' || v != null;
         },
         message: props => `startDate is required when payment status is 'paid'`,
@@ -45,11 +44,18 @@ const memberDetailsSchema = new Schema({
       type: Date,
       validate: {
         validator: function (v) {
-          // If status is paid, endDate should be present
+          // Ensure endDate is provided when status is 'paid'
           return this.paymentStatus.status === 'unpaid' || v != null;
         },
         message: props => `endDate is required when payment status is 'paid'`,
       },
+    },
+    amount: {
+      type: Number,
+      required: function () {
+        return this.status === 'paid';
+      },
+      default: 0, // Set default amount to 0
     },
   },
 }, { timestamps: true });
@@ -75,7 +81,6 @@ const userSchema = new Schema({
   },
   members: [memberDetailsSchema],
 }, { timestamps: true });
-
 
 userSchema.index({ email: 1 });
 

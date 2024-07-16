@@ -11,10 +11,8 @@ import {
   TableContainer,
   TableHead,
   TableRow,
-  TableSortLabel,
   Paper,
   Box,
-  Grid,
   Avatar,
   Typography,
   IconButton,
@@ -24,40 +22,66 @@ import {
   DialogContentText,
   DialogTitle,
   Button,
-  useMediaQuery
+  useMediaQuery,
+  CircularProgress,
+  Tooltip,
+  createTheme,
+  ThemeProvider
 } from '@mui/material';
 import { Delete, Edit } from '@mui/icons-material';
 import { toast } from 'react-hot-toast';
 
+const theme = createTheme({
+  palette: {
+    primary: {
+      main: '#1976d2', // Primary color
+    },
+    secondary: {
+      main: '#dc004e', // Secondary color
+    },
+  },
+});
+
 const ManageMembers = () => {
   const [members, setMembers] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
-  const [sortDirection, setSortDirection] = useState('asc');
-  const [sortColumn, setSortColumn] = useState('name');
   const [openDialog, setOpenDialog] = useState(false);
   const [selectedMemberId, setSelectedMemberId] = useState(null);
+  const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
   const isMobile = useMediaQuery('(max-width:600px)');
 
   useEffect(() => {
     const fetchMembers = async () => {
+      setLoading(true);
       try {
         const response = await axios.get('/members');
-        setMembers(response.data);
+        const updatedMembers = response.data.map(member => {
+          const currentDate = new Date();
+          const endDate = new Date(member.paymentStatus.endDate);
+          if (member.paymentStatus.status === 'paid' && currentDate > endDate) {
+            return {
+              ...member,
+              paymentStatus: {
+                ...member.paymentStatus,
+                status: 'unpaid',
+                amount: 0
+              }
+            };
+          }
+          return member;
+        });
+        setMembers(updatedMembers);
       } catch (error) {
         console.error('Error fetching members:', error);
         toast.error('Failed to load members.');
+      } finally {
+        setLoading(false);
       }
     };
 
     fetchMembers();
   }, []);
-
-  const handleSort = (column) => {
-    const isAsc = sortColumn === column && sortDirection === 'asc';
-    setSortDirection(isAsc ? 'desc' : 'asc');
-    setSortColumn(column);
-  };
 
   const handleDelete = async (memberId) => {
     try {
@@ -89,32 +113,21 @@ const ManageMembers = () => {
     member.name.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  const sortedMembers = filteredMembers.sort((a, b) => {
-    if (sortDirection === 'asc') {
-      return a[sortColumn] > b[sortColumn] ? 1 : -1;
-    }
-    return a[sortColumn] < b[sortColumn] ? 1 : -1;
-  });
-
   const calculateDaysRemaining = (paymentStatus) => {
     if (paymentStatus.status === 'unpaid') {
       return 'N/A';
     }
-
     const currentDate = new Date();
     const end = new Date(paymentStatus.endDate);
-    
-    // Check if the current date is past the end date
     if (currentDate > end) {
       return 0; // or return a message like 'Expired'
     }
-
     const diffTime = Math.abs(end - currentDate);
     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
     return diffDays;
   };
 
-    const getRandomColor = () => {
+  const getRandomColor = () => {
     const colors = [
       '#FF5733', '#33FF57', '#3357FF', '#FF33A1',
       '#F1C40F', '#8E44AD', '#3498DB', '#E67E22'
@@ -122,190 +135,154 @@ const ManageMembers = () => {
     return colors[Math.floor(Math.random() * colors.length)];
   };
 
-
   return (
-    <Box sx={{ padding: '10px', marginTop: '15px' }}>
-      <Box sx={{ display: 'flex', flexDirection: 'column', mb: 2 }}>
-        <Typography variant="subtitle2" component="p" color="textSecondary">
-          Overview
-        </Typography>
-        <Typography variant="h6" component="h1" sx={{ mb: 2 }}>
-          Manage Members
-        </Typography>
-      </Box>
+    <ThemeProvider theme={theme}>
+      <Box sx={{ padding: '10px', marginTop: '15px' }}>
+        <Box sx={{ display: 'flex', flexDirection: 'column', mb: 2 }}>
+          <Typography variant="subtitle2" component="p" color="textSecondary">
+            Overview
+          </Typography>
+          <Typography variant="h6" component="h1" sx={{ mb: 2 }}>
+            Manage Members
+          </Typography>
+        </Box>
 
-      <Card variant="elevation" sx={{ boxShadow:"5" , borderRadius: "10px"}}>
-        <CardContent>
-          <Grid container justifyContent="flex-end" sx={{ mb: 2 }}>
-            <Grid item xs={12} sm={6}>
-              <TextField
-                label="Search Members"
-                variant="outlined"
-                fullWidth
-                onChange={(e) => setSearchTerm(e.target.value)}
-                size="small"
-              />
-            </Grid>
-          </Grid>
+        <Card variant="outlined" sx={{ boxShadow: 5, borderRadius: 2 }}>
+          <CardContent>
+            {loading ? (
+              <Box
+                sx={{
+                  display: 'flex',
+                  justifyContent: 'center',
+                  alignItems: 'center',
+                  height: '100%', // Ensure it takes the full height of the card
+                  padding: 2 // Optional: Add some padding
+                }}
+              >
+                <CircularProgress />
+              </Box>
+            ) : (
+              <>
+               <Box sx={{ mb: 2, display: 'flex', justifyContent: 'flex-end' }}>
+  <TextField
+    label="Search Members"
+    variant="outlined"
+    sx={{ width: "50%", mr: 1 }}
+    onChange={(e) => setSearchTerm(e.target.value)}
+    size="small"
+  />
+</Box>
 
-
-          {isMobile ? (
-          
-            <Grid container spacing={2}>
-              {sortedMembers.map((member) => (
-                <Grid item xs={12} sm={6} key={member._id}>
-                  <Card>
-                    <CardContent>
-                    <Box display="flex" flexDirection="column" alignItems="flex-start">
-  <Avatar sx={{ bgcolor: getRandomColor(), mr: 2 }}>
-    {member.name.charAt(0)}
-  </Avatar>
-  <Typography variant="h8">{member.name}</Typography>
-  <Typography variant="h8">{member.phoneNumber}</Typography>
-  <Typography variant="h8">{member.shift}</Typography>
- 
-  <Typography variant="h8">{calculateDaysRemaining(member.paymentStatus)}</Typography>
-</Box>  
-
-                      <Typography>Payment Status: {member.paymentStatus.status}</Typography>
-                      <Box sx={{ mt: 2 }}>
-                        <IconButton onClick={() => navigate(`/edit-member/${member._id}`)}>
-                          <Edit />
-                        </IconButton>
-                        <IconButton onClick={() => handleOpenDialog(member._id)}>
-                          <Delete />
-                        </IconButton>
-                      </Box>
-                    </CardContent>
-                  </Card>
-                </Grid>
-              ))}
-            </Grid>
-          ) : (
-            // Render table for larger screens
-            <div style={{ maxHeight: '600px', overflow: 'auto' }}>
-              <TableContainer component={Paper}>
-                <Table>
-                  <TableHead>
-                    <TableRow>
-                      <TableCell>
-                        <TableSortLabel
-                          active={sortColumn === 'name'}
-                          direction={sortColumn === 'name' ? sortDirection : 'asc'}
-                          onClick={() => handleSort('name')}
-                        >
-                          Name
-                        </TableSortLabel>
-                      </TableCell>
-                      <TableCell>
-                        <TableSortLabel
-                          active={sortColumn === 'age'}
-                          direction={sortColumn === 'age' ? sortDirection : 'asc'}
-                          onClick={() => handleSort('age')}
-                        >
-                          Age
-                        </TableSortLabel>
-                      </TableCell>
-                      <TableCell>
-                        <TableSortLabel
-                          active={sortColumn === 'phoneNumber'}
-                          direction={sortColumn === 'phoneNumber' ? sortDirection : 'asc'}
-                          onClick={() => handleSort('phoneNumber')}
-                        >
-                          Phone Number
-                        </TableSortLabel>
-                      </TableCell>
-                      <TableCell>
-                        <TableSortLabel
-                          active={sortColumn === 'dateOfJoining'}
-                          direction={sortColumn === 'dateOfJoining' ? sortDirection : 'asc'}
-                          onClick={() => handleSort('dateOfJoining')}
-                        >
-                          Date of Joining
-                        </TableSortLabel>
-                      </TableCell>
-                      <TableCell>
-                        <TableSortLabel
-                          active={sortColumn === 'shift'}
-                          direction={sortColumn === 'shift' ? sortDirection : 'asc'}
-                          onClick={() => handleSort('shift')}
-                        >
-                          Shift
-                        </TableSortLabel>
-                      </TableCell>
-                      <TableCell>
-                        <TableSortLabel
-                          active={sortColumn === 'paymentStatus.status'}
-                          direction={sortColumn === 'paymentStatus.status' ? sortDirection : 'asc'}
-                          onClick={() => handleSort('paymentStatus.status')}
-                        >
-                          Payment Status
-                        </TableSortLabel>
-                      </TableCell>
-                      <TableCell>
-                        <TableSortLabel
-                          active={sortColumn === 'daysRemaining'}
-                          direction={sortColumn === 'daysRemaining' ? sortDirection : 'asc'}
-                          onClick={() => handleSort('daysRemaining')}
-                        >
-                          Days Remaining
-                        </TableSortLabel>
-                      </TableCell>
-                      <TableCell>Actions</TableCell>
-                    </TableRow>
-                  </TableHead>
-                  <TableBody>
-                    {sortedMembers.map((member) => (
-                      <TableRow key={member._id}>
-                        <TableCell>
-                          <Box display="flex" alignItems="center">
-                            <Avatar sx={{ bgcolor: getRandomColor(), mr: 3 }}>
-                              {member.name.charAt(0)}
-                            </Avatar>
-                            {member.name}
-                          </Box>
-                        </TableCell>
-                        <TableCell>{member.age}</TableCell>
-                        <TableCell>{member.phoneNumber}</TableCell>
-                        <TableCell>{new Date(member.dateOfJoining).toLocaleDateString()}</TableCell>
-                        <TableCell>{member.shift}</TableCell>
-                        <TableCell>{member.paymentStatus.status}</TableCell>
-                        <TableCell>{calculateDaysRemaining(member.paymentStatus)}</TableCell>
-                        <TableCell>
-                          <IconButton onClick={() => navigate(`/edit-member/${member._id}`)}>
-                            <Edit />
-                          </IconButton>
-                          <IconButton onClick={() => handleOpenDialog(member._id)}>
-                            <Delete />
-                          </IconButton>
-                        </TableCell>
-                      </TableRow>
+                {isMobile ? (
+                  <Grid container spacing={2}>
+                    {filteredMembers.map((member) => (
+                      <Grid item xs={12} sm={6} key={member._id}>
+                        <Card variant="outlined" sx={{ boxShadow: 3, borderRadius: 1, '&:hover': { boxShadow: 6 } }}>
+                          <CardContent>
+                            <Box display="flex" flexDirection="column" alignItems="flex-start">
+                              <Avatar sx={{ bgcolor: getRandomColor(), mr: 2, width: 56, height: 56 }}>
+                                {member.name.charAt(0)}
+                              </Avatar>
+                              <Typography variant="h6" sx={{ fontWeight: 'bold' }}>{member.name}</Typography>
+                              <Typography variant="body2" color="textSecondary">{member.phoneNumber}</Typography>
+                              <Typography variant="body2" color="textSecondary">{member.shift}</Typography>
+                              <Typography variant="body2">Days Remaining: {calculateDaysRemaining(member.paymentStatus)}</Typography>
+                              <Typography variant="body2">Paid Amount: ₹{member.paymentStatus.amount || 0}</Typography>
+                            </Box>
+                            <Box sx={{ mt: 2 }}>
+                              <Tooltip title="Edit Member">
+                                <IconButton onClick={() => navigate(`/edit-member/${member._id}`)} color="primary">
+                                  <Edit />
+                                </IconButton>
+                              </Tooltip>
+                              <Tooltip title="Delete Member">
+                                <IconButton onClick={() => handleOpenDialog(member._id)} color="error">
+                                  <Delete />
+                                </IconButton>
+                              </Tooltip>
+                            </Box>
+                          </CardContent>
+                        </Card>
+                      </Grid>
                     ))}
-                  </TableBody>
-                </Table>
-              </TableContainer>
-            </div>
-          )}
-        </CardContent>
-      </Card>
-
-      <Dialog open={openDialog} onClose={handleCloseDialog}>
-        <DialogTitle>Confirm Delete</DialogTitle>
-        <DialogContent>
-          <DialogContentText>
-            Are you sure you want to delete this member? This action cannot be undone.
-          </DialogContentText>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={handleCloseDialog} color="primary">
-            Cancel
-          </Button>
-          <Button onClick={handleConfirmDelete} color="secondary">
-            Delete
-          </Button>
-        </DialogActions>
-      </Dialog>
-    </Box>
+                  </Grid>
+                ) : (
+                  <div style={{ maxHeight: '600px', overflow: 'auto' }}>
+                    <TableContainer component={Paper}>
+                      <Table>
+                        <TableHead>
+                          <TableRow>
+                            <TableCell>Name</TableCell>
+                            <TableCell>Age</TableCell>
+                            <TableCell>Phone Number</TableCell>
+                            <TableCell>Date of Joining</TableCell>
+                            <TableCell>Shift</TableCell>
+                            <TableCell>Payment Status</TableCell>
+                            <TableCell>Days Remaining</TableCell>
+                            <TableCell>Paid Amount</TableCell>
+                            <TableCell>Actions</TableCell>
+                          </TableRow>
+                        </TableHead>
+                        <TableBody>
+                          {filteredMembers.map((member) => (
+                            <TableRow key={member._id}>
+                              <TableCell>
+                                <Box display="flex" alignItems="center">
+                                  <Avatar sx={{ bgcolor: getRandomColor(), mr: 2 }}>
+                                    {member.name.charAt(0)}
+                                  </Avatar>
+                                  {member.name}
+                                </Box>
+                              </TableCell>
+                              <TableCell>{member.age}</TableCell>
+                              <TableCell>{member.phoneNumber}</TableCell>
+                              <TableCell>{new Date(member.dateOfJoining).toLocaleDateString()}</TableCell>
+                              <TableCell>{member.shift}</TableCell>
+                              <TableCell>{member.paymentStatus.status}</TableCell>
+                              <TableCell>{calculateDaysRemaining(member.paymentStatus)}</TableCell>
+                              <TableCell>{member.paymentStatus.amount || 0}</TableCell>
+                              <TableCell>
+                                <Tooltip title="Edit Member">
+                                  <IconButton onClick={() => navigate(`/edit-member/${member._id}`)} color="primary">
+                                    <Edit />
+                                  </IconButton>
+                                </Tooltip>
+                                <Tooltip title="Delete Member">
+                                  <IconButton onClick={() => handleOpenDialog(member._id)} color="error">
+                                    <Delete />
+                                  </IconButton>
+                                </Tooltip>
+                              </TableCell>
+                            </TableRow>
+                          ))}
+                        </TableBody>
+                      </Table>
+                    </TableContainer>
+                  </div>
+                )}
+              </>
+            )}
+          </CardContent>
+        </Card>
+        
+        <Dialog open={openDialog} onClose={handleCloseDialog}>
+          <DialogTitle>Confirm Delete</DialogTitle>
+          <DialogContent>
+            <DialogContentText>
+              Are you sure you want to delete this member?
+            </DialogContentText>
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={handleCloseDialog} color="primary">
+              Cancel
+            </Button>
+            <Button onClick={handleConfirmDelete} color="primary">
+              Delete
+            </Button>
+          </DialogActions>
+        </Dialog>
+      </Box>
+    </ThemeProvider>
   );
 };
 

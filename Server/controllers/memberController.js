@@ -3,9 +3,10 @@ const User = require("../Models/user.js");
 // Function to update payment status
 const updatePaymentStatus = (members) => {
   const currentDate = new Date();
-  members.forEach(member => {
+  members.forEach((member) => {
     if (member.paymentStatus && member.paymentStatus.endDate < currentDate) {
-      member.paymentStatus.status = 'unpaid';
+      member.paymentStatus.status = "unpaid";
+      member.paymentStatus.amount = 0;
     }
   });
 };
@@ -20,12 +21,20 @@ const addMember = async (req, res) => {
     if (!member.name || !member.age || !member.phoneNumber || !member.shift) {
       return res.status(400).json({ error: "Missing required fields" });
     }
-
+    member.paymentStatus.amount =
+      member.paymentStatus?.status === "paid" ? member.amount : 0;
     // Set default payment status and dates
     member.paymentStatus = {
-      status: member.paymentStatus?.status || 'unpaid',
-      startDate: member.paymentStatus?.status === 'paid' ? member.paymentStatus.startDate : null,
-      endDate: member.paymentStatus?.status === 'paid' ? member.paymentStatus.endDate : null,
+      status: member.paymentStatus?.status || "unpaid",
+      startDate:
+        member.paymentStatus?.status === "paid"
+          ? member.paymentStatus.startDate
+          : null,
+      endDate:
+        member.paymentStatus?.status === "paid"
+          ? member.paymentStatus.endDate
+          : null,
+      amount: member.paymentStatus?.status === "paid" ? member.amount : 0,
     };
 
     const user = await User.findById(userId);
@@ -75,13 +84,20 @@ const updateMember = async (req, res) => {
       return res.status(404).json({ error: "User not found" });
     }
 
-    const memberIndex = user.members.findIndex(member => member._id.toString() === memberId);
+    const memberIndex = user.members.findIndex(
+      (member) => member._id.toString() === memberId
+    );
     if (memberIndex === -1) {
       return res.status(404).json({ error: "Member not found" });
     }
 
     // Validate required fields
-    if (!updatedMember.name || !updatedMember.age || !updatedMember.phoneNumber || !updatedMember.shift) {
+    if (
+      !updatedMember.name ||
+      !updatedMember.age ||
+      !updatedMember.phoneNumber ||
+      !updatedMember.shift
+    ) {
       return res.status(400).json({ error: "Missing required fields" });
     }
 
@@ -113,7 +129,9 @@ const deleteMember = async (req, res) => {
       return res.status(404).json({ error: "User not found" });
     }
 
-    user.members = user.members.filter(member => member._id.toString() !== memberId);
+    user.members = user.members.filter(
+      (member) => member._id.toString() !== memberId
+    );
     await user.save();
 
     res.json(user.members);
@@ -126,8 +144,10 @@ const deleteMember = async (req, res) => {
 // Get user details
 const getUserDetails = async (req, res) => {
   try {
-    const userId = req.user.id; 
-    const user = await User.findById(userId).select('name email gymName members'); 
+    const userId = req.user.id;
+    const user = await User.findById(userId).select(
+      "name email gymName members"
+    );
     if (!user) return res.status(404).json({ error: "User not found" });
 
     // Update payment statuses
@@ -176,42 +196,75 @@ const getMemberById = async (req, res) => {
   }
 };
 
-
 const getDashboardData = async (req, res) => {
   try {
     const userId = req.user.id;
-    const user = await User.findById(userId).populate('members');
+    const user = await User.findById(userId).populate("members");
 
     if (!user) {
       return res.status(404).json({ error: "User not found" });
     }
 
     const totalMembers = user.members.length;
-    const activeMembers = user.members.filter(member => member.paymentStatus.status === 'paid').length;
+    const activeMembers = user.members.filter(
+      (member) => member.paymentStatus.status === "paid"
+    ).length;
 
     const memberStats = {};
-    user.members.forEach(member => {
-      const month = member.dateOfJoining.toLocaleString('default', { month: 'long' });
+    user.members.forEach((member) => {
+      const month = member.dateOfJoining.toLocaleString("default", {
+        month: "long",
+      });
       memberStats[month] = (memberStats[month] || 0) + 1;
     });
 
-    const monthlyData = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December']
-      .map(month => memberStats[month] || 0);
+    const monthlyData = [
+      "January",
+      "February",
+      "March",
+      "April",
+      "May",
+      "June",
+      "July",
+      "August",
+      "September",
+      "October",
+      "November",
+      "December",
+    ].map((month) => memberStats[month] || 0);
 
     // Check for upcoming payment expirations
     const currentDate = new Date();
     const notifications = user.members
-      .filter(member => member.paymentStatus.status === 'paid' && member.paymentStatus.endDate)
-      .filter(member => {
+      .filter(
+        (member) =>
+          member.paymentStatus.status === "paid" && member.paymentStatus.endDate
+      )
+      .filter((member) => {
         const expirationDate = new Date(member.paymentStatus.endDate);
-        const timeDiff = expirationDate - currentDate;
-        return timeDiff > 0 && timeDiff <= 5 * 24 * 60 * 60 * 1000; // 5 days in milliseconds
+        return (
+          expirationDate > currentDate &&
+          expirationDate <=
+            new Date(currentDate.getTime() + 5 * 24 * 60 * 60 * 1000)
+        );
       })
-      .map(member => ({
-        message: `${member.name}'s payment is due in ${Math.ceil((new Date(member.paymentStatus.endDate) - currentDate) / (1000 * 60 * 60 * 24))} days!`,
+      .map((member) => ({
+        message: `${member.name}'s payment is due in ${Math.ceil(
+          (new Date(member.paymentStatus.endDate) - currentDate) /
+            (1000 * 60 * 60 * 24)
+        )} days!`,
       }));
+    const totalAmountPaid = user.members.reduce((acc, member) => {
+      return (
+        acc +
+        (member.paymentStatus.status === "paid"
+          ? member.paymentStatus.amount
+          : 0)
+      );
+    }, 0);
 
     res.json({
+      totalAmountPaid,
       totalMembers,
       activeMembers,
       monthlyData,
@@ -223,6 +276,45 @@ const getDashboardData = async (req, res) => {
   }
 };
 
+const addBulkMembers = async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const members = req.body;
+
+    for (const member of members) {
+      if (!member.name || !member.age || !member.phoneNumber || !member.shift) {
+        return res
+          .status(400)
+          .json({ error: "Missing required fields for one or more members" });
+      }
+      member.paymentStatus = {
+        status: member.paymentStatus?.status || "unpaid",
+        startDate:
+          member.paymentStatus?.status === "paid"
+            ? member.paymentStatus.startDate
+            : null,
+        endDate:
+          member.paymentStatus?.status === "paid"
+            ? member.paymentStatus.endDate
+            : null,
+        amount: member.paymentStatus?.status === "paid" ? member.amount : 0,
+      };
+    }
+
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({ error: "User not found" });
+    }
+
+    user.members.push(...members);
+    await user.save();
+
+    res.json(user.members);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Server error" });
+  }
+};
 
 module.exports = {
   addMember,
@@ -231,5 +323,6 @@ module.exports = {
   deleteMember,
   getUserDetails,
   getMemberById,
-  getDashboardData
+  getDashboardData,
+  addBulkMembers,
 };

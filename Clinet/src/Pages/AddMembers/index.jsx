@@ -26,6 +26,7 @@ const AddMember = () => {
       startDate: '',
       endDate: '',
     },
+    amount: '', // Added amount field
   });
 
   const [loading, setLoading] = useState(false);
@@ -79,6 +80,11 @@ const AddMember = () => {
     e.preventDefault();
     if (!validateDates()) return; // Validate dates before submission
 
+    // Log the amount if the status is 'paid'
+    if (member.paymentStatus.status === 'paid') {
+      console.log("Amount added:", member.amount);
+    }
+
     try {
       setLoading(true);
       if (id) {
@@ -98,6 +104,7 @@ const AddMember = () => {
             startDate: '',
             endDate: '',
           },
+          amount: '', // Reset amount
         });
       }
     } catch (error) {
@@ -200,6 +207,14 @@ const AddMember = () => {
                       onChange={handleChange}
                       required
                       InputLabelProps={{ shrink: true }}
+                    />
+                    <TextField
+                      label="Amount"
+                      name="amount" // Bind the amount field here
+                      type="number"
+                      value={member.amount}
+                      onChange={handleChange}
+                      required // Make it required if necessary
                     />
                   </>
                 )}
