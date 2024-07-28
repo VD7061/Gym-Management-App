@@ -169,7 +169,7 @@ const Layout = ({ children }) => {
             { text: 'Dashboard', icon: <DashboardIcon />, path: '/dashboard' },
             { text: 'Manage Members', icon: <GroupIcon />, path: '/members' },
             { text: 'Add Member', icon: <PersonAddIcon />, path: '/addmember' },
-            { text: 'Payments', icon: <PaymentIcon />, path: '/payments' }, // Add Payments path
+            // { text: 'Payments', icon: <PaymentIcon />, path: '/payments' }, // Add Payments path
           ].map((item) => (
             <ListItem key={item.text} disablePadding sx={{ display: 'block' }}>
                <Link to={item.path} style={{ textDecoration: 'none', color: 'inherit' }}>

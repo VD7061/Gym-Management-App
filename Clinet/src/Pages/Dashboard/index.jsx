@@ -21,7 +21,7 @@ const Dashboard = () => {
   useEffect(() => {
     const fetchDashboardData = async () => {
       try {
-        const response = await axios.get('http://localhost:5000/dashboard');
+        const response = await axios.get('/dashboard');
         setDashboardData(response.data);
       } catch (error) {
         console.error('Error fetching dashboard data:', error);
